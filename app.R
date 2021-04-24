@@ -5,6 +5,8 @@ library(tigris)
 library(mapview)
 library(dplyr)
 library(leaflet)
+library(ggplot2)
+library(DT)
 options(tigris_use_cache = TRUE)
 key <- "7360ddbb0f07f32de07b273190ba9e543e8a206d" #needed for census API data
 
@@ -44,7 +46,24 @@ ui <- navbarPage("CS 424 Project Three",
         ),
           column(10,
             fluidRow(
+              h2("Note: the button at the bottom right is a reset button"),
               mapviewOutput("wsMap")
+          )
+        )
+      )
+    ),
+    tabPanel("Graph and Table",
+      fluidRow(
+        column(2,
+          fluidRow(
+            selectInput("propGT", "Select which property to view",
+                        c("Electricity", "Gas"), selected = "Electricity")
+          )
+        ),
+        column(5,
+          fluidRow(
+            #plotOutput()
+            dataTableOutput("wsTable")
           )
         )
       )
@@ -151,11 +170,8 @@ server <- function(input, output) {
     else if (input$type == "Commercial")
     {
       wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Commercial")
-      westSidev2 <- group_by(wsSubset, GEOID) %>% summarise_at(
-        vars(wsProperty(), sum)
-      )
-      #westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
-      #                                  BUILDING.TYPE, wsProperty())
+      westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
+                                        BUILDING.TYPE, wsProperty())
       westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
     else if (input$type == "Industrial")
@@ -167,11 +183,29 @@ server <- function(input, output) {
     }
   })
   
+  westSideReactive2 <- reactive({
+    if (input$propGT == "Electricity")
+    {
+      return(westSide[5:16])
+    }
+    else if (input$propGT == "Gas")
+    {
+      return(westSide[20:31])
+    }
+  })
+  
   ### rendering the west side map
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
     mWS <- mapview(wsData, zcol = wsProperty())
     mWS@map
+  })
+  
+  output$wsTable <- DT::renderDataTable({
+    DT::datatable({
+      westSideDT <- westSideReactive2()
+    },
+    options = list(scrollX = TRUE))
   })
   
 }
