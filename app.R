@@ -150,7 +150,20 @@ server <- function(input, output) {
     }
     else if (input$type == "Commercial")
     {
-      
+      wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Commercial")
+      westSidev2 <- group_by(wsSubset, GEOID) %>% summarise_at(
+        vars(wsProperty(), sum)
+      )
+      #westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
+      #                                  BUILDING.TYPE, wsProperty())
+      westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
+    }
+    else if (input$type == "Industrial")
+    {
+      wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Industrial")
+      westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
+                                        BUILDING.TYPE, wsProperty())
+      westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
   })
   
@@ -158,7 +171,7 @@ server <- function(input, output) {
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
     mWS <- mapview(wsData, zcol = wsProperty())
-     mWS@map
+    mWS@map
   })
   
 }
