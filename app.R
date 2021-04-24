@@ -62,7 +62,11 @@ ui <- navbarPage("CS 424 Project Three",
         ),
         column(5,
           fluidRow(
-            #plotOutput()
+            plotOutput("wsPlot")
+          )
+        ),
+        column(5,
+          fluidRow(
             dataTableOutput("wsTable")
           )
         )
@@ -79,7 +83,7 @@ ui <- navbarPage("CS 424 Project Three",
 
 server <- function(input, output) {
   
-  wsProperty <- reactive({
+  propertySelect <- reactive({
     if(input$property == "Electricity")
     {
       if(input$month == "January")
@@ -157,28 +161,31 @@ server <- function(input, output) {
   westSideReactive <- reactive({
     if(input$type == "All")
     {
-      westSidev2 <- westSide %>% select(GEOID, COMMUNITY.AREA.NAME, wsProperty())
+      westSidev2 <- westSide %>% select(GEOID, COMMUNITY.AREA.NAME, 
+                                        propertySelect())
       westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
     else if (input$type == "Residential")
     {
       wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Residential")
       westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
-                                        BUILDING.TYPE, wsProperty())
+                                        BUILDING.TYPE, propertySelect())
       westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
     else if (input$type == "Commercial")
     {
       wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Commercial")
       westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
-                                        BUILDING.TYPE, wsProperty())
+                                        BUILDING.TYPE, 
+                                        propertySelect())
       westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
     else if (input$type == "Industrial")
     {
       wsSubset <- subset(westSide, westSide$BUILDING.TYPE == "Industrial")
       westSidev2 <- wsSubset %>% select(GEOID, COMMUNITY.AREA.NAME, 
-                                        BUILDING.TYPE, wsProperty())
+                                        BUILDING.TYPE, 
+                                        propertySelect())
       westSidev2 <- decen %>% inner_join(westSidev2, "GEOID")
     }
   })
@@ -197,8 +204,16 @@ server <- function(input, output) {
   ### rendering the west side map
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
-    mWS <- mapview(wsData, zcol = wsProperty())
+    mWS <- mapview(wsData, zcol = propertySelect())
     mWS@map
+  })
+  
+  output$wsPlot <- renderPlot({
+    westSidePlot <- westSideReactive2()
+    sumdata<-data.frame(value=apply(westSidePlot, 2, sum))
+    sumdata$key=rownames(sumdata)
+    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+      geom_bar(colour="black", stat = "identity")
   })
   
   output$wsTable <- DT::renderDataTable({
