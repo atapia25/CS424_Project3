@@ -54,13 +54,13 @@ ui <- navbarPage("CS 424 Project Three",
     ),
     tabPanel("Graph and Table",
       fluidRow(
-        column(2,
+        column(1,
           fluidRow(
             selectInput("propGT", "Select which property to view",
                         c("Electricity", "Gas"), selected = "Electricity")
           )
         ),
-        column(5,
+        column(6,
           fluidRow(
             plotOutput("wsPlot")
           )
@@ -68,6 +68,71 @@ ui <- navbarPage("CS 424 Project Three",
         column(5,
           fluidRow(
             dataTableOutput("wsTable")
+          )
+        )
+      )
+    )
+  ),
+  navbarMenu("Community Area comparison",
+    tabPanel("Heat Map",
+      fluidRow(
+        column(1,
+          fluidRow(
+            selectInput("areaLeft", "Select which community area to view",
+                        commAreas, selected = "Near West Side"),
+            selectInput("propLeft", "Select which property
+                          to view", c("Electricity",
+                                      "Gas",
+                                      "Building Age",
+                                      "Building Height",
+                                      "Total Population"), selected = "Electricity"),
+            selectInput("monthLeft", "Select a month to view",
+                        c(month.name, "Total"), selected = "Total"),
+            selectInput("typeLeft", "Select a building type to view",
+                        c("Residential", "Commercial", "Industrial", "All"),
+                        selected = "All")
+            )
+          ),
+        column(5,
+          fluidRow(
+            mapviewOutput("leftMap")
+            )
+          ),
+        column(5,
+          fluidRow(
+            mapviewOutput("rightMap")
+            )
+          ),
+        column(1,
+           fluidRow(
+             selectInput("areaRight", "Select which community area to view",
+                         commAreas, selected = "Loop"),
+             selectInput("propRight", "Select which property
+                      to view", c("Electricity",
+                                  "Gas",
+                                  "Building Age",
+                                  "Building Height",
+                                  "Total Population"), selected = "Electricity"),
+             selectInput("monthRight", "Select a month to view",
+                         c(month.name, "Total"), selected = "Total"),
+             selectInput("typeRight", "Select a building type to view",
+                         c("Residential", "Commercial", "Industrial", "All"),
+                         selected = "All"))
+        )
+      )
+    ),
+    tabPanel("Graphs and Tables",
+      fluidRow(
+        column(1,
+           fluidRow(
+             selectInput("propGTLeft", "Select which property to view",
+                         c("Electricity", "Gas"), selected = "Electricity")
+          )
+        ),
+        column(1,
+          fluidRow(
+            selectInput("propGTRight", "Select which property to view",
+                        c("Electricity", "Gas"), selected = "Electricity")
           )
         )
       )
@@ -158,6 +223,7 @@ server <- function(input, output) {
     return(wsOption)
   })
   
+  ### ------- the west side data reactive functions -------- ### 
   westSideReactive <- reactive({
     if(input$type == "All")
     {
@@ -201,6 +267,266 @@ server <- function(input, output) {
     }
   })
   
+  ### -------- For selecting the property of the left side of the comparison ----- ###
+  propSelectLeft <- reactive({
+    if(input$propLeft == "Electricity")
+    {
+      if(input$monthLeft == "January")
+        leftOption <- "KWH.JANUARY.2010"
+      else if (input$monthLeft == "February")
+        leftOption <- "KWH.FEBRUARY.2010"
+      else if(input$monthLeft == "March")
+        leftOption <- "KWH.MARCH.2010"
+      else if (input$monthLeft == "April")
+        leftOption <- "KWH.APRIL.2010"
+      else if (input$monthLeft == "May")
+        leftOption <- "KWH.MAY.2010"
+      else if(input$monthLeft == "June")
+        leftOption <- "KWH.JUNE.2010"
+      else if (input$monthLeft == "July")
+        leftOption <- "KWH.JULY.2010"
+      else if (input$monthLeft == "August")
+        leftOption <- "KWH.AUGUST.2010"
+      else if(input$monthLeft == "September")
+        leftOption <- "KWH.SEPTEMBER.2010"
+      else if (input$monthLeft == "October")
+        leftOption <- "KWH.OCTOBER.2010"
+      else if (input$monthLeft == "November")
+        leftOption <- "KWH.NOVEMBER.2010"
+      else if (input$monthLeft == "December")
+        leftOption <- "KWH.DECEMBER.2010"
+      else if (input$monthLeft == "Total")
+        leftOption <- "TOTAL.KWH" 
+    }
+    else if (input$propLeft == "Gas")
+    {
+      ## April was spelled wrong in the dataset
+      if(input$monthLeft == "January")
+        leftOption <- "THERM.JANUARY.2010"
+      else if (input$monthLeft == "February")
+        leftOption <- "THERM.FEBRUARY.2010"
+      else if(input$monthLeft == "March")
+        leftOption <- "THERM.MARCH.2010"
+      else if (input$monthLeft == "April")
+        leftOption <- "TERM.APRIL.2010"
+      else if (input$monthLeft == "May")
+        leftOption <- "THERM.MAY.2010"
+      else if(input$monthLeft == "June")
+        leftOption <- "THERM.JUNE.2010"
+      else if (input$monthLeft == "July")
+        leftOption <- "THERM.JULY.2010"
+      else if (input$monthLeft == "August")
+        leftOption <- "THERM.AUGUST.2010"
+      else if(input$monthLeft == "September")
+        leftOption <- "THERM.SEPTEMBER.2010"
+      else if (input$monthLeft == "October")
+        leftOption <- "THERM.OCTOBER.2010"
+      else if (input$monthLeft == "November")
+        leftOption <- "THERM.NOVEMBER.2010"
+      else if (input$monthLeft == "December")
+        leftOption <- "THERM.DECEMBER.2010"
+      else if (input$monthLeft == "Total")
+        leftOption <- "TOTAL.THERMS" 
+    }
+    else if (input$propLeft == "Building Age")
+    {
+      leftOption <- "AVERAGE.BUILDING.AGE"
+    }
+    else if (input$propLeft == "Building Height")
+    {
+      leftOption <- "AVERAGE.STORIES"
+    }
+    else if (input$propLeft == "Total Population")
+    {
+      leftOption <- "TOTAL.POPULATION"
+    }
+    return(leftOption)
+  })
+  
+  ### ------- the left side reactive functions ------- ###
+  leftSideReactive <- reactive({
+    if(input$typeLeft == "All")
+    {
+      leftSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft)
+      leftSidev2 <- leftSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                        propSelectLeft())
+      leftSidev2 <- decen %>% inner_join(leftSidev2, "GEOID")
+    }
+    else if (input$typeLeft == "Residential")
+    {
+      leftSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft
+                         & energyUse2010$BUILDING.TYPE == "Residential")
+      leftSidev2 <- leftSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                        BUILDING.TYPE, propSelectLeft())
+      leftSidev2 <- decen %>% inner_join(leftSidev2, "GEOID")
+    }
+    else if (input$typeLeft == "Commercial")
+    {
+      leftSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft
+                         & energyUse2010$BUILDING.TYPE == "Commercial")
+      leftSidev2 <- leftSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                        BUILDING.TYPE, propSelectLeft())
+      leftSidev2 <- decen %>% inner_join(leftSidev2, "GEOID")
+    }
+    else if (input$typeLeft == "Industrial")
+    {
+      leftSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft
+                         & energyUse2010$BUILDING.TYPE == "Industrial")
+      leftSidev2 <- leftSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                        BUILDING.TYPE, propSelectLeft())
+      leftSidev2 <- decen %>% inner_join(leftSidev2, "GEOID")
+    }
+  })
+  
+  leftSideReactive2 <- reactive({
+    if (input$propGTLeft == "Electricity")
+    {
+      leftSide <- subset(energyUse2010,
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft)
+      return(leftSide[5:16])
+    }
+    else if (input$propGTLeft == "Gas")
+    {
+      leftSide <- subset(energyUse2010,
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaLeft)
+      return(leftSide[20:31])
+    }
+  })
+  
+  ### --------- For selecting the property of the right side of the comparison --------- ###
+  propSelectRight <- reactive({
+    if(input$propRight == "Electricity")
+    {
+      if(input$monthRight == "January")
+        rightOption <- "KWH.JANUARY.2010"
+      else if (input$monthRight == "February")
+        rightOption <- "KWH.FEBRUARY.2010"
+      else if(input$monthRight == "March")
+        rightOption <- "KWH.MARCH.2010"
+      else if (input$monthRight == "April")
+        rightOption <- "KWH.APRIL.2010"
+      else if (input$monthRight == "May")
+        rightOption <- "KWH.MAY.2010"
+      else if(input$monthRight == "June")
+        rightOption <- "KWH.JUNE.2010"
+      else if (input$monthRight == "July")
+        rightOption <- "KWH.JULY.2010"
+      else if (input$monthRight == "August")
+        rightOption <- "KWH.AUGUST.2010"
+      else if(input$monthRight == "September")
+        rightOption <- "KWH.SEPTEMBER.2010"
+      else if (input$monthRight == "October")
+        rightOption <- "KWH.OCTOBER.2010"
+      else if (input$monthRight == "November")
+        rightOption <- "KWH.NOVEMBER.2010"
+      else if (input$monthRight == "December")
+        rightOption <- "KWH.DECEMBER.2010"
+      else if (input$monthRight == "Total")
+        rightOption <- "TOTAL.KWH" 
+    }
+    else if (input$propRight == "Gas")
+    {
+      ## April was spelled wrong in the dataset
+      if(input$monthRight == "January")
+        rightOption <- "THERM.JANUARY.2010"
+      else if (input$monthRight == "February")
+        rightOption <- "THERM.FEBRUARY.2010"
+      else if (input$monthRight == "March")
+        rightOption <- "THERM.MARCH.2010"
+      else if (input$monthRight == "April")
+        rightOption <- "TERM.APRIL.2010"
+      else if (input$monthRight == "May")
+        rightOption <- "THERM.MAY.2010"
+      else if (input$monthRight == "June")
+        rightOption <- "THERM.JUNE.2010"
+      else if (input$monthRight == "July")
+        rightOption <- "THERM.JULY.2010"
+      else if (input$monthRight == "August")
+        rightOption <- "THERM.AUGUST.2010"
+      else if (input$monthRight == "September")
+        rightOption <- "THERM.SEPTEMBER.2010"
+      else if (input$monthRight == "October")
+        rightOption <- "THERM.OCTOBER.2010"
+      else if (input$monthRight == "November")
+        rightOption <- "THERM.NOVEMBER.2010"
+      else if (input$monthRight == "December")
+        rightOption <- "THERM.DECEMBER.2010"
+      else if (input$monthRight == "Total")
+        rightOption <- "TOTAL.THERMS" 
+    }
+    else if (input$propRight == "Building Age")
+    {
+      rightOption <- "AVERAGE.BUILDING.AGE"
+    }
+    else if (input$propRight == "Building Height")
+    {
+      rightOption <- "AVERAGE.STORIES"
+    }
+    else if (input$propRight == "Total Population")
+    {
+      rightOption <- "TOTAL.POPULATION"
+    }
+    return(rightOption)
+  })
+  
+  ### ------- the right side reactive functions ------- ###
+  rightSideReactive <- reactive({
+    if(input$typeRight == "All")
+    {
+      rightSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaRight)
+      rightSidev2 <- rightSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                          propSelectRight())
+      rightSidev2 <- decen %>% inner_join(rightSidev2, "GEOID")
+    }
+    else if (input$typeRight == "Residential")
+    {
+      rightSide <- subset(energyUse2010, 
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaRight
+                         & energyUse2010$BUILDING.TYPE == "Residential")
+      rightSidev2 <- rightSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                        BUILDING.TYPE, propSelectRight())
+      rightSidev2 <- decen %>% inner_join(rightSidev2, "GEOID")
+    }
+    else if (input$typeRight == "Commercial")
+    {
+      rightSide <- subset(energyUse2010, 
+                          energyUse2010$COMMUNITY.AREA.NAME == input$areaRight
+                          & energyUse2010$BUILDING.TYPE == "Commercial")
+      rightSidev2 <- rightSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                          BUILDING.TYPE, propSelectRight())
+      rightSidev2 <- decen %>% inner_join(rightSidev2, "GEOID")
+    }
+    else if (input$typeRight == "Industrial")
+    {
+      rightSide <- subset(energyUse2010, 
+                          energyUse2010$COMMUNITY.AREA.NAME == input$areaRight
+                          & energyUse2010$BUILDING.TYPE == "Industrial")
+      rightSidev2 <- rightSide %>% select(GEOID, COMMUNITY.AREA.NAME,
+                                          BUILDING.TYPE, propSelectRight())
+      rightSidev2 <- decen %>% inner_join(rightSidev2, "GEOID")
+    }
+  })
+  
+  rightSideReactive2 <- reactive({
+    if (input$propGTRight == "Electricity")
+    {
+      rightSide <- subset(energyUse2010,
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaRight)
+      return(rightSide[5:16])
+    }
+    else if (input$propGTRight == "Gas")
+    {
+      rightSide <- subset(energyUse2010,
+                         energyUse2010$COMMUNITY.AREA.NAME == input$areaRight)
+      return(rightSide[20:31])
+    }
+  })
+  
   ### rendering the west side map
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
@@ -223,6 +549,49 @@ server <- function(input, output) {
     options = list(scrollX = TRUE))
   })
   
+  ### render the left map for comparison
+  output$leftMap <- renderLeaflet({
+    leftData <- leftSideReactive()
+    mL <- mapview(leftData, zcol = propSelectLeft())
+    mL@map
+  })
+  
+  output$leftPlot <- renderPlot({
+    leftSidePlot <- leftSideReactive2()
+    sumdata<-data.frame(value=apply(leftSidePlot, 2, sum))
+    sumdata$key=rownames(sumdata)
+    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+      geom_bar(colour="black", stat = "identity")
+  })
+  
+  output$leftTable <- DT::renderDataTable({
+    DT::datatable({
+      leftDT <- leftSideReactive2()
+    },
+    options = list(scrollX = TRUE))
+  })
+  
+  ### render the right map for comparison
+  output$rightMap <- renderLeaflet({
+    rightData <- rightSideReactive()
+    mR <- mapview(rightData, zcol = propSelectRight())
+    mR@map
+  })
+  
+  output$rightPlot <- renderPlot({
+    rightSidePlot <- rightSideReactive2()
+    sumdata<-data.frame(value=apply(rightSidePlot, 2, sum))
+    sumdata$key=rownames(sumdata)
+    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+      geom_bar(colour="black", stat = "identity")
+  })
+  
+  output$rightTable <- DT::renderDataTable({
+    DT::datatable({
+      rightDT <- rightSideReactive2()
+    },
+    options = list(scrollX = TRUE))
+  })
 }
 
 shinyApp(ui = ui, server = server)
