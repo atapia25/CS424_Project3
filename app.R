@@ -40,7 +40,7 @@ ui <- navbarPage("CS 424 Project Three",
               selectInput("month", "Select a month to view",
                           c(month.name, "Total"), selected = "Total"),
               selectInput("type", "Select a building type to view",
-                          c("Residential", "Commerical", "Industrial", "All"),
+                          c("Residential", "Commercial", "Industrial", "All"),
                           selected = "All")
           )
         ),
