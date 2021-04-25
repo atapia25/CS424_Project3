@@ -574,8 +574,7 @@ server <- function(input, output) {
                                     "KWH.JULY.2010", "KWH.AUGUST.2010",
                                     "KWH.SEPTEMBER.2010", "KWH.OCTOBER.2010",
                                     "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
-        scale_y_continuous(name = "Amount of Electricity (kWh)", labels = scales::comma) +
-        scale_color_brewer(palette = brewer.pal())
+        scale_y_continuous(name = "Amount of Electricity (kWh)", labels = scales::comma)
     }
     else if (input$propGT == "Gas")
     {
@@ -600,7 +599,9 @@ server <- function(input, output) {
                                     "THERM.JULY.2010", "THERM.AUGUST.2010",
                                     "THERM.SEPTEMBER.2010", "THERM.OCTOBER.2010",
                                     "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
-        ggtitle()
+        scale_y_continuous(name = "Amount of Thermal Energy", labels = scales::comma) + 
+        ggtitle("Thermal Energy used in the West Side area") +
+        theme(plot.title = element_text(hjust = 0.5))
     }
   })
   
@@ -647,7 +648,8 @@ server <- function(input, output) {
                                     "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
         ggtitle(paste("Amount of Electricity used in the", input$areaLeft, 
                       "area (2010)")) +
-        theme(plot.title = element_text(hjust = 0.5))
+        theme(plot.title = element_text(hjust = 0.5)) +
+        scale_y_continuous(name = "Amount of Electricity (kWh)", labels = scales::comma)
     }
     else if (input$propGTLeft == "Gas")
     {
@@ -674,7 +676,8 @@ server <- function(input, output) {
                                     "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
         ggtitle(paste("Thermal Energy used in the", input$areaLeft, 
                       "area (2010)")) +
-        theme(plot.title = element_text(hjust = 0.5))
+        theme(plot.title = element_text(hjust = 0.5)) +
+        scale_y_continuous(name = "Amount of Thermal Energy", labels = scales::comma)
     }
   })
   
@@ -721,7 +724,8 @@ server <- function(input, output) {
                                     "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
         ggtitle(paste("Amount of Electricity used in the", input$areaRight, 
                       "area (2010)")) +
-        theme(plot.title = element_text(hjust = 0.5))
+        theme(plot.title = element_text(hjust = 0.5)) +
+        scale_y_continuous(name = "Amount of Electricity (kWh)", labels = scales::comma)
     }
     else if (input$propGTRight == "Gas")
     {
@@ -748,7 +752,8 @@ server <- function(input, output) {
                                     "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
         ggtitle(paste("Thermal Energy generated in the", input$areaRight, 
                       "area (2010)")) +
-        theme(plot.title = element_text(hjust = 0.5))
+        theme(plot.title = element_text(hjust = 0.5)) +
+        scale_y_continuous(name = "Amount of Thermal Energy", labels = scales::comma)
     }
   })
   
