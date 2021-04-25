@@ -151,7 +151,43 @@ ui <- navbarPage("CS 424 Project Three",
       )
     )
   ),
+  tabPanel("City of Chicago",
+    fluidRow(
+      column(1,
+        fluidRow(
+          selectInput("areaTotalLeft", "Select an area to view",
+                      c(commAreas, "All"), selected = "All"),
+          selectInput("propertyTotalLeft", "Select which property to view",
+                      c("Electricity",
+                        "Gas",
+                        "Building Age",
+                        "Building Height",
+                        "Total Population"), selected = "Electricity")
+        )
+      ),
+      column(5,
+        fluidRow(
+          mapviewOutput("totalMapLeft")
+        )
+      )
+    )
+  ),
   tabPanel("About",
+           h1("Information about data"),
+           p("The data consists of electrical power usage in the city of Chicago
+             in 2010. The power comes from general electricty usage as well as coming
+             from thermal energy. The data also contains the types of builings,
+             neighborhoods in Chicago such as the Loop, Lincoln Park, and many
+             others. This is vital because it could shed some light on how exactly
+             electricity is used within the city of Chicago."),
+           br(),
+           p("The data can be downloaded for your own use at this ",
+             a("link from Kaggle,",
+               href = "https://www.kaggle.com/chicago/chicago-energy-usage-2010"),
+             "and it can also be downloaded from the City of Chicago website ",
+             a("right here.",
+               href = "https://data.cityofchicago.org/Environment-Sustainable-Development/Energy-Usage-2010/8yq3-m6wp")),
+           br(),
            h2("Author of code"),
            p("The code for this Shiny App was written by Andres Tapia. At the time of this release,
               I am currently in my second semester of my third year at the University of Illinois
@@ -540,6 +576,22 @@ server <- function(input, output) {
     }
   })
   
+  ### -------- Reactive functions for the whole city of Chicago ------- ###
+  totalReactiveLeft <- reactive({
+    if (input$areaTotalLeft != "All")
+    {
+      energyData <- subset(energyUse2010, 
+                           energyUse2010$COMMUNITY.AREA.NAME == input$areaTotalLeft)
+      energyDatav2 <- energyData %>% select(GEOID, COMMUNITY.AREA.NAME, TOTAL.KWH)
+      energyDatav2 <- decen %>% inner_join(energyDatav2, "GEOID")
+    }
+    else if (input$areaTotalLeft == "All")
+    {
+      energyData <- energyUse2010 %>% select(GEOID, COMMUNITY.AREA.NAME, TOTAL.KWH)
+      energyData <- decen %>% inner_join(energyData,"GEOID")
+    }
+  })
+  
   ### -------- rendering the west side map ---------- ###
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
@@ -762,6 +814,13 @@ server <- function(input, output) {
       rightDT <- rightSideReactive2()
     },
     options = list(scrollX = TRUE))
+  })
+  
+  ### render including the whole city of chicago
+  output$totalMapLeft <- renderLeaflet({
+    totalLeftData <- totalReactiveLeft()
+    mTL <- mapview(totalLeftData, zcol = "TOTAL.KWH")
+    mTL@map
   })
 }
 
