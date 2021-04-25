@@ -26,6 +26,9 @@ westSide <- subset(energyUse2010, energyUse2010$COMMUNITY.AREA.NAME == "Near Wes
 decen <- get_decennial(geography = "block", state = "IL", variables = "P001001",
                        county = "Cook", geometry = TRUE)
 
+tract <- tracts("IL", county = "Cook", year = 2010)
+tract <- tract %>% rename(GEOID = GEOID10)
+
 ui <- navbarPage("CS 424 Project Three",
     navbarMenu("Near West Side",
       tabPanel("Heat Map",
@@ -155,6 +158,8 @@ ui <- navbarPage("CS 424 Project Three",
     fluidRow(
       column(1,
         fluidRow(
+          selectInput("levelLeft", "Select a level to view",
+                      c("Block", "Tract"), selected = "Block"),
           selectInput("areaTotalLeft", "Select an area to view",
                       c(commAreas, "All"), selected = "All"),
           selectInput("propertyTotalLeft", "Select which property to view",
@@ -587,8 +592,16 @@ server <- function(input, output) {
     }
     else if (input$areaTotalLeft == "All")
     {
-      energyData <- energyUse2010 %>% select(GEOID, COMMUNITY.AREA.NAME, TOTAL.KWH)
-      energyData <- decen %>% inner_join(energyData,"GEOID")
+      if(input$levelLeft == "Block")
+      {
+        energyData <- energyUse2010 %>% select(GEOID, COMMUNITY.AREA.NAME, TOTAL.KWH)
+        energyData <- decen %>% inner_join(energyData,"GEOID")
+      }
+      else if (input$levelLeft == "Tract")
+      {
+        energyData <- energyUse2010 %>% select(GEOID, COMMUNITY.AREA.NAME, TOTAL.KWH)
+        energyData <- tract %>% inner_join(energyData, "GEOID")
+      }
     }
   })
   
