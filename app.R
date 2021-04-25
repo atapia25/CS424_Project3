@@ -7,6 +7,7 @@ library(dplyr)
 library(leaflet)
 library(ggplot2)
 library(DT)
+library(RColorBrewer)
 options(tigris_use_cache = TRUE)
 key <- "7360ddbb0f07f32de07b273190ba9e543e8a206d" #needed for census API data
 
@@ -539,7 +540,7 @@ server <- function(input, output) {
     }
   })
   
-  ### rendering the west side map
+  ### -------- rendering the west side map ---------- ###
   output$wsMap <- renderLeaflet({
     wsData <- westSideReactive()
     mWS <- mapview(wsData, zcol = propertySelect())
@@ -572,7 +573,9 @@ server <- function(input, output) {
                                     "KWH.MAY.2010", "KWH.JUNE.2010",
                                     "KWH.JULY.2010", "KWH.AUGUST.2010",
                                     "KWH.SEPTEMBER.2010", "KWH.OCTOBER.2010",
-                                    "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010"))
+                                    "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
+        scale_y_continuous(name = "Amount of Electricity (kWh)", labels = scales::comma) +
+        scale_color_brewer(palette = brewer.pal())
     }
     else if (input$propGT == "Gas")
     {
@@ -596,7 +599,8 @@ server <- function(input, output) {
                                     "THERM.MAY.2010", "THERM.JUNE.2010",
                                     "THERM.JULY.2010", "THERM.AUGUST.2010",
                                     "THERM.SEPTEMBER.2010", "THERM.OCTOBER.2010",
-                                    "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010"))
+                                    "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
+        ggtitle()
     }
   })
   
@@ -618,8 +622,60 @@ server <- function(input, output) {
     leftSidePlot <- leftSideReactive2()
     sumdata<-data.frame(value=apply(leftSidePlot, 2, sum))
     sumdata$key=rownames(sumdata)
-    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
-      geom_bar(colour="black", stat = "identity")
+    if (input$propGTLeft == "Electricity")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("KWH.APRIL.2010" = "April",
+                                    "KWH.AUGUST.2010" = "August",
+                                    "KWH.DECEMBER.2010" = "December",
+                                    "KWH.FEBRUARY.2010" = "February",
+                                    "KWH.JANUARY.2010" = "January",
+                                    "KWH.JULY.2010" = "July",
+                                    "KWH.JUNE.2010" = "June",
+                                    "KWH.MARCH.2010" = "March",
+                                    "KWH.MAY.2010" = "May",
+                                    "KWH.NOVEMBER.2010" = "November",
+                                    "KWH.OCTOBER.2010" = "October",
+                                    "KWH.SEPTEMBER.2010" = "September"),
+                         limits = c("KWH.JANUARY.2010", "KWH.FEBRUARY.2010",
+                                    "KWH.MARCH.2010", "KWH.APRIL.2010", 
+                                    "KWH.MAY.2010", "KWH.JUNE.2010",
+                                    "KWH.JULY.2010", "KWH.AUGUST.2010",
+                                    "KWH.SEPTEMBER.2010", "KWH.OCTOBER.2010",
+                                    "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
+        ggtitle(paste("Amount of Electricity used in the", input$areaLeft, 
+                      "area (2010)")) +
+        theme(plot.title = element_text(hjust = 0.5))
+    }
+    else if (input$propGTLeft == "Gas")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("TERM.APRIL.2010" = "April",
+                                    "THERM.AUGUST.2010" = "August",
+                                    "THERM.DECEMBER.2010" = "December",
+                                    "THERM.FEBRUARY.2010" = "February",
+                                    "THERM.JANUARY.2010" = "January",
+                                    "THERM.JULY.2010" = "July",
+                                    "THERM.JUNE.2010" = "June",
+                                    "THERM.MARCH.2010" = "March",
+                                    "THERM.MAY.2010" = "May",
+                                    "THERM.NOVEMBER.2010" = "November",
+                                    "THERM.OCTOBER.2010" = "October",
+                                    "THERM.SEPTEMBER.2010" = "September"),
+                         limits = c("THERM.JANUARY.2010", "THERM.FEBRUARY.2010",
+                                    "THERM.MARCH.2010", "TERM.APRIL.2010", 
+                                    "THERM.MAY.2010", "THERM.JUNE.2010",
+                                    "THERM.JULY.2010", "THERM.AUGUST.2010",
+                                    "THERM.SEPTEMBER.2010", "THERM.OCTOBER.2010",
+                                    "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
+        ggtitle(paste("Thermal Energy used in the", input$areaLeft, 
+                      "area (2010)")) +
+        theme(plot.title = element_text(hjust = 0.5))
+    }
   })
   
   output$leftTable <- DT::renderDataTable({
@@ -640,8 +696,60 @@ server <- function(input, output) {
     rightSidePlot <- rightSideReactive2()
     sumdata<-data.frame(value=apply(rightSidePlot, 2, sum))
     sumdata$key=rownames(sumdata)
-    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
-      geom_bar(colour="black", stat = "identity")
+    if (input$propGTRight == "Electricity")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("KWH.APRIL.2010" = "April",
+                                    "KWH.AUGUST.2010" = "August",
+                                    "KWH.DECEMBER.2010" = "December",
+                                    "KWH.FEBRUARY.2010" = "February",
+                                    "KWH.JANUARY.2010" = "January",
+                                    "KWH.JULY.2010" = "July",
+                                    "KWH.JUNE.2010" = "June",
+                                    "KWH.MARCH.2010" = "March",
+                                    "KWH.MAY.2010" = "May",
+                                    "KWH.NOVEMBER.2010" = "November",
+                                    "KWH.OCTOBER.2010" = "October",
+                                    "KWH.SEPTEMBER.2010" = "September"),
+                         limits = c("KWH.JANUARY.2010", "KWH.FEBRUARY.2010",
+                                    "KWH.MARCH.2010", "KWH.APRIL.2010", 
+                                    "KWH.MAY.2010", "KWH.JUNE.2010",
+                                    "KWH.JULY.2010", "KWH.AUGUST.2010",
+                                    "KWH.SEPTEMBER.2010", "KWH.OCTOBER.2010",
+                                    "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010")) +
+        ggtitle(paste("Amount of Electricity used in the", input$areaRight, 
+                      "area (2010)")) +
+        theme(plot.title = element_text(hjust = 0.5))
+    }
+    else if (input$propGTRight == "Gas")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("TERM.APRIL.2010" = "April",
+                                    "THERM.AUGUST.2010" = "August",
+                                    "THERM.DECEMBER.2010" = "December",
+                                    "THERM.FEBRUARY.2010" = "February",
+                                    "THERM.JANUARY.2010" = "January",
+                                    "THERM.JULY.2010" = "July",
+                                    "THERM.JUNE.2010" = "June",
+                                    "THERM.MARCH.2010" = "March",
+                                    "THERM.MAY.2010" = "May",
+                                    "THERM.NOVEMBER.2010" = "November",
+                                    "THERM.OCTOBER.2010" = "October",
+                                    "THERM.SEPTEMBER.2010" = "September"),
+                         limits = c("THERM.JANUARY.2010", "THERM.FEBRUARY.2010",
+                                    "THERM.MARCH.2010", "TERM.APRIL.2010", 
+                                    "THERM.MAY.2010", "THERM.JUNE.2010",
+                                    "THERM.JULY.2010", "THERM.AUGUST.2010",
+                                    "THERM.SEPTEMBER.2010", "THERM.OCTOBER.2010",
+                                    "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010")) +
+        ggtitle(paste("Thermal Energy generated in the", input$areaRight, 
+                      "area (2010)")) +
+        theme(plot.title = element_text(hjust = 0.5))
+    }
   })
   
   output$rightTable <- DT::renderDataTable({
