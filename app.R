@@ -129,6 +129,18 @@ ui <- navbarPage("CS 424 Project Three",
                          c("Electricity", "Gas"), selected = "Electricity")
           )
         ),
+        column(5,
+          fluidRow(
+            plotOutput("leftPlot"),
+            dataTableOutput("leftTable")
+          )
+        ),
+        column(5,
+          fluidRow(
+            plotOutput("rightPlot"),
+            dataTableOutput("rightTable")
+          )
+        ),
         column(1,
           fluidRow(
             selectInput("propGTRight", "Select which property to view",
@@ -538,8 +550,54 @@ server <- function(input, output) {
     westSidePlot <- westSideReactive2()
     sumdata<-data.frame(value=apply(westSidePlot, 2, sum))
     sumdata$key=rownames(sumdata)
-    ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
-      geom_bar(colour="black", stat = "identity")
+    if (input$propGT == "Electricity")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("KWH.APRIL.2010" = "April",
+                                    "KWH.AUGUST.2010" = "August",
+                                    "KWH.DECEMBER.2010" = "December",
+                                    "KWH.FEBRUARY.2010" = "February",
+                                    "KWH.JANUARY.2010" = "January",
+                                    "KWH.JULY.2010" = "July",
+                                    "KWH.JUNE.2010" = "June",
+                                    "KWH.MARCH.2010" = "March",
+                                    "KWH.MAY.2010" = "May",
+                                    "KWH.NOVEMBER.2010" = "November",
+                                    "KWH.OCTOBER.2010" = "October",
+                                    "KWH.SEPTEMBER.2010" = "September"),
+                         limits = c("KWH.JANUARY.2010", "KWH.FEBRUARY.2010",
+                                    "KWH.MARCH.2010", "KWH.APRIL.2010", 
+                                    "KWH.MAY.2010", "KWH.JUNE.2010",
+                                    "KWH.JULY.2010", "KWH.AUGUST.2010",
+                                    "KWH.SEPTEMBER.2010", "KWH.OCTOBER.2010",
+                                    "KWH.NOVEMBER.2010", "KWH.DECEMBER.2010"))
+    }
+    else if (input$propGT == "Gas")
+    {
+      ggplot(data=sumdata, aes(x=key,y=value,fill=key)) +
+        geom_bar(colour="black", stat = "identity") +
+        scale_x_discrete(name = "Month",
+                         labels = c("TERM.APRIL.2010" = "April",
+                                    "THERM.AUGUST.2010" = "August",
+                                    "THERM.DECEMBER.2010" = "December",
+                                    "THERM.FEBRUARY.2010" = "February",
+                                    "THERM.JANUARY.2010" = "January",
+                                    "THERM.JULY.2010" = "July",
+                                    "THERM.JUNE.2010" = "June",
+                                    "THERM.MARCH.2010" = "March",
+                                    "THERM.MAY.2010" = "May",
+                                    "THERM.NOVEMBER.2010" = "November",
+                                    "THERM.OCTOBER.2010" = "October",
+                                    "THERM.SEPTEMBER.2010" = "September"),
+                         limits = c("THERM.JANUARY.2010", "THERM.FEBRUARY.2010",
+                                    "THERM.MARCH.2010", "TERM.APRIL.2010", 
+                                    "THERM.MAY.2010", "THERM.JUNE.2010",
+                                    "THERM.JULY.2010", "THERM.AUGUST.2010",
+                                    "THERM.SEPTEMBER.2010", "THERM.OCTOBER.2010",
+                                    "THERM.NOVEMBER.2010", "THERM.DECEMBER.2010"))
+    }
   })
   
   output$wsTable <- DT::renderDataTable({
